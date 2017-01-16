@@ -9,21 +9,24 @@ public class DriveTrain {
     public ModernRoboticsI2cGyro gyro;
 
     public DcMotor NWMotor = null; // these should be made private when EncoderDrive_Gyro_Method is fixed
-    public DcMotor NEMotor = null; //
+    public DcMotor NEMotor = null; // then maybe create getter & setter methods?
     public DcMotor SWMotor = null; //
     public DcMotor SEMotor = null; //
 
-    double NWPower;
-    double NEPower;
-    double SWPower;
-    double SEPower;
+    private double NWPower;
+    private double NEPower;
+    private double SWPower;
+    private double SEPower;
 
-    int nwTarget;
-    int neTarget;
-    int swTarget;
-    int seTarget;
+    private int nwTarget;
+    private int neTarget;
+    private int swTarget;
+    private int seTarget;
 
     //double heading = gyro.getHeading();
+    static final double TEST_HEADING = 45;  // temporary for testing?
+    double heading = TEST_HEADING;          // when ready, delete these 2 & uncomment gyro.getHeading()?
+
     LinearOpMode opMode;
 
     double IntegrateDriveAngle = 0;
@@ -35,8 +38,6 @@ public class DriveTrain {
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double DRIVE_SPEED = 0.6;
     static final double TURN_SPEED = 0.5;
-    static final double TEST_HEADING = 45;
-    double heading = TEST_HEADING;
 
     public DriveTrain(LinearOpMode opMode){   // constructor
         this.opMode = opMode;
@@ -79,10 +80,7 @@ public class DriveTrain {
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
         setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
 
-        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
-            updateTelemetryForTargetAndCurrent();
-        }
-
+        waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setMotorPower(0, 0, 0, 0);
     }
 
@@ -95,10 +93,7 @@ public class DriveTrain {
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
         setMotorPower(Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED));
 
-        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
-            updateTelemetryForTargetAndCurrent();
-        }
-
+        waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setMotorPower(0, 0, 0, 0);
     }
 
@@ -114,10 +109,7 @@ public class DriveTrain {
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
         setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
 
-        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
-            updateTelemetryForTargetAndCurrent();
-        }
-
+        waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setMotorPower(0, 0, 0, 0);
     }
 
@@ -182,6 +174,12 @@ public class DriveTrain {
         SEMotor.setTargetPosition(SETarget);
     }
 
+    private void waitForDriveTargetsToReach() {
+        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
+            updateTelemetryForTargetAndCurrent();
+        }
+    }
+
     private void updateTelemetryForTargetAndCurrent() {
         opMode.telemetry.addData("NW Target & Current", nwTarget +" ; " + NWMotor.getCurrentPosition());
         opMode.telemetry.addData("NE Target & Current", neTarget +" ; " + NEMotor.getCurrentPosition());
@@ -221,7 +219,6 @@ public class DriveTrain {
         setAllEncoders(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-
     public double GridOrientationMotor1and4 () {
 
         return IntegrateDriveAngle = ((Math.pow(heading, 2))/(Math.pow(1.623, 2)))+((Math.pow(heading-0.927, 2))/(Math.pow(1.5, 2)));
@@ -233,9 +230,5 @@ public class DriveTrain {
         return IntegrateDriveAngle = ((Math.pow(heading, 2))/(Math.pow(1.623, 2)))+((Math.pow(heading+0.927, 2))/(Math.pow(1.5, 2)));
 
     }
-
-
-
-
 }
 

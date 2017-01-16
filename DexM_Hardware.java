@@ -25,8 +25,8 @@ public class DexM_Hardware {
         launcher = new Launcher(opMode);
     }
 
+    // for Teleop only - free resources briefly during each cycle
     public void waitForTick(long periodMs) {
-
         long  remaining = periodMs - (long)period.milliseconds();
         // sleep for the remaining portion of the regular cycle period.
         if (remaining > 0) {
