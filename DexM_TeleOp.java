@@ -15,7 +15,7 @@ public class DexM_TeleOp extends LinearOpMode {
     DexM_Hardware robot = new DexM_Hardware();
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
 
         int heading = 0;
         int angleZ = 0;
@@ -23,23 +23,7 @@ public class DexM_TeleOp extends LinearOpMode {
         boolean curResetState  = false;
 
         robot.init(this);
-
-        telemetry.addData(">", "Gyro Calibrating. Do Not move!");
-        telemetry.update();
-        //robot.DriveTrain.gyro.calibrate();
-
-        while (!isStopRequested() && robot.DriveTrain.gyro.isCalibrating())  {
-
-            sleep(50);
-            idle();
-
-        }
-
-        telemetry.addData("Say", "Hello Driver");
-        telemetry.update();
-
-        telemetry.addData(">", "Gyro Calibrated.  Press Start.");
-        telemetry.update();
+        robot.driveTrain.calibrateGyro();
 
         waitForStart();
 
@@ -48,63 +32,44 @@ public class DexM_TeleOp extends LinearOpMode {
             curResetState = (gamepad1.a && gamepad1.b);
 
             if(curResetState && !lastResetState)  {
-
-                robot.DriveTrain.gyro.resetZAxisIntegrator();
-
+                robot.driveTrain.gyro.resetZAxisIntegrator();
             }
 
             lastResetState = curResetState;
 
-            heading = robot.DriveTrain.gyro.getHeading();
-            angleZ  = robot.DriveTrain.gyro.getIntegratedZValue();
+            heading = robot.driveTrain.gyro.getHeading();
+            angleZ  = robot.driveTrain.gyro.getIntegratedZValue();
 
-            robot.DriveTrain.Drive();
+            robot.driveTrain.Drive();
 
             if (gamepad2.a) {
-
-                robot.collector.Collect();
-
+                robot.collector.collect();
             }
-
             else if (gamepad2.x) {
-
-                robot.collector.Abort();
-
+                robot.collector.reverse();
             }
-
             else if (gamepad2.b) {
-
-                robot.collector.Stop();
-
+                robot.collector.stop();
             }
-
             if (gamepad2.left_bumper) {
-
                 robot.launcher.launch();
-
             }
-
             else {
-
-                robot.launcher.Idle();
-
+                robot.launcher.stop();
             }
 
-            robot.collector.SpeedTest();
+            robot.collector.speedTest();
 
             telemetry.addData(">", "Press A & B to reset Heading.");
-            telemetry.addData("0", "Heading %03f", robot.DriveTrain.heading);
+            telemetry.addData("0", "Heading %03f", robot.driveTrain.heading);
             telemetry.addData("1", "Int. Ang. %03d", angleZ);
-            telemetry.addData("NWSpeed: ", robot.DriveTrain.NWPower);
-            telemetry.addData("NESpeed: ", robot.DriveTrain.NEPower);
-            telemetry.addData("SWSpeed: ", robot.DriveTrain.SWPower);
-            telemetry.addData("SESpeed: ", robot.DriveTrain.SEPower);
+            telemetry.addData("NWSpeed: ", robot.driveTrain.NWPower);
+            telemetry.addData("NESpeed: ", robot.driveTrain.NEPower);
+            telemetry.addData("SWSpeed: ", robot.driveTrain.SWPower);
+            telemetry.addData("SESpeed: ", robot.driveTrain.SEPower);
             telemetry.update();
 
             robot.waitForTick(40);
-
         }
-
     }
-
 }

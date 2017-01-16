@@ -3,24 +3,31 @@ package org.firstinspires.ftc.teamcode.opmodes8767;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class DriveTrain {
 
     public ModernRoboticsI2cGyro gyro;
 
-    public DcMotor NWMotor = null;
-    public DcMotor NEMotor = null;
-    public DcMotor SWMotor = null;
-    public DcMotor SEMotor = null;
+    public DcMotor NWMotor = null; // these should be made private when EncoderDrive_Gyro_Method is fixed
+    public DcMotor NEMotor = null; //
+    public DcMotor SWMotor = null; //
+    public DcMotor SEMotor = null; //
+
     double NWPower;
     double NEPower;
     double SWPower;
     double SEPower;
+
+    int nwTarget;
+    int neTarget;
+    int swTarget;
+    int seTarget;
+
     //double heading = gyro.getHeading();
-    double heading = TEST_HEADING;
+    LinearOpMode opMode;
+
     double IntegrateDriveAngle = 0;
+
     static final double COUNTS_PER_MOTOR_REV = 1440;
     static final double DRIVE_GEAR_REDUCTION = 1.0;
     static final double WHEEL_DIAMETER_INCHES = 4.0;
@@ -29,30 +36,14 @@ public class DriveTrain {
     static final double DRIVE_SPEED = 0.6;
     static final double TURN_SPEED = 0.5;
     static final double TEST_HEADING = 45;
+    double heading = TEST_HEADING;
 
-    LinearOpMode opMode;
-
-    public DriveTrain(LinearOpMode opMode){
-
+    public DriveTrain(LinearOpMode opMode){   // constructor
         this.opMode = opMode;
 
-        NWMotor = opMode.hardwareMap.dcMotor.get("NWMotor");
-        NEMotor = opMode.hardwareMap.dcMotor.get("NEMotor");
-        SWMotor = opMode.hardwareMap.dcMotor.get("SWMotor");
-        SEMotor = opMode.hardwareMap.dcMotor.get("SEMotor");
+        initialDriveMotorsSetup(opMode);
+
         gyro = (ModernRoboticsI2cGyro)opMode.hardwareMap.gyroSensor.get("gyro");
-
-        NWMotor.setDirection(DcMotor.Direction.FORWARD);
-        NEMotor.setDirection(DcMotor.Direction.REVERSE);
-        SWMotor.setDirection(DcMotor.Direction.FORWARD);
-        SEMotor.setDirection(DcMotor.Direction.REVERSE);
-
-        SetMotorPower(0, 0, 0, 0);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        NEMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        SWMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        SEMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void Drive(){
@@ -62,207 +53,174 @@ public class DriveTrain {
             NEPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x) + GridOrientationMotor2and3();
             SWPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x) + GridOrientationMotor2and3();
             SEPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x) + GridOrientationMotor1and4();
-
         }
-
         else {
             NWPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
             NEPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
             SWPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
             SEPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
-
         }
 
-        if (opMode.gamepad1.left_bumper) {
+        // check if driver wants to run an individual motor with triggers & bumpers
+        testIndividualMotors();
 
-            NWPower = .5;
+        // set motor power based on joysticks **** individual states WILL override joysticks
+        setMotorPower(NWPower, NEPower, SWPower, SEPower);
 
-        }
-
-        else if (opMode.gamepad1.right_bumper) {
-
-            NEPower = .5;
-
-        }
-
-        else if (opMode.gamepad1.left_trigger > 0) {
-
-            SWPower = .5;
-
-        }
-
-        else if (opMode.gamepad1.right_trigger > 0) {
-
-            SEPower = .5;
-
-        }
-
-        SetMotorPower(NWPower, NEPower, SWPower, SEPower);
-
-        //Nomalize();
-
+        //normalize();
     }
 
-    public void encoderDrive (double Inches) {
+    public void encoderDrive (double inches) {
+        // calculate & adjust drive motor targets for number of inches desired
+        int adjustTicks = (int) (inches * COUNTS_PER_INCH);
+        adjustAllCurrentTargets(adjustTicks, adjustTicks, adjustTicks, adjustTicks);
 
-        int NWTarget;
-        int NETarget;
-        int SWTarget;
-        int SETarget;
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+        setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
 
-        NWTarget = NWMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        NETarget = NEMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        SWTarget = SWMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        SETarget = SEMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-
-        NWMotor.setTargetPosition(NWTarget);
-        NEMotor.setTargetPosition(NETarget);
-        SWMotor.setTargetPosition(SWTarget);
-        SEMotor.setTargetPosition(SETarget);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        NEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        SetMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
-
-        while (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy()){
-
-            NWMotor.getCurrentPosition();
-            NEMotor.getCurrentPosition();
-            SWMotor.getCurrentPosition();
-            SEMotor.getCurrentPosition();
-
+        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
+            updateTelemetryForTargetAndCurrent();
         }
 
-        SetMotorPower(0, 0, 0, 0);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        NEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        setMotorPower(0, 0, 0, 0);
     }
 
-    public void encoderTurn (double Degrees) {
+    public void encoderTurn (double degrees) {
+        // calculate & adjust drive motor targets for number of degrees desired
+        int adjustTicks = (int) (degrees * .1 * COUNTS_PER_INCH);
+        adjustAllCurrentTargets(-adjustTicks, adjustTicks, -adjustTicks, adjustTicks);
 
-        int NWTarget;
-        int NETarget;
-        int SWTarget;
-        int SETarget;
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+        setMotorPower(Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED));
 
-        NWTarget = NWMotor.getCurrentPosition() + (int) (-Degrees * .1 * COUNTS_PER_INCH);
-        NETarget = NEMotor.getCurrentPosition() + (int) (Degrees * .1 * COUNTS_PER_INCH);
-        SWTarget = SWMotor.getCurrentPosition() + (int) (-Degrees * .1 * COUNTS_PER_INCH);
-        SETarget = SEMotor.getCurrentPosition() + (int) (Degrees * .1 * COUNTS_PER_INCH);
-
-        NWMotor.setTargetPosition(NWTarget);
-        NEMotor.setTargetPosition(NETarget);
-        SWMotor.setTargetPosition(SWTarget);
-        SEMotor.setTargetPosition(SETarget);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        NEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        SetMotorPower(Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED));
-
-        while (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy()){
-
-            NWMotor.getCurrentPosition();
-            NEMotor.getCurrentPosition();
-            SWMotor.getCurrentPosition();
-            SEMotor.getCurrentPosition();
-
+        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
+            updateTelemetryForTargetAndCurrent();
         }
 
-        SetMotorPower(0, 0, 0, 0);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        NEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        setMotorPower(0, 0, 0, 0);
     }
 
-    public void encoderStrafe (double Inches) {
+    public void encoderStrafe (double inches) {
 
         // CURRENTLY INACTIVE
 
-        int NWTarget;
-        int NETarget;
-        int SWTarget;
-        int SETarget;
+        // calculate & adjust drive motor targets for number of inches desired
+        int adjustTicks = (int) (inches * COUNTS_PER_INCH);
+        adjustAllCurrentTargets(adjustTicks, adjustTicks, adjustTicks, adjustTicks);
 
-        NWTarget = NWMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        NETarget = NEMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        SWTarget = SWMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
-        SETarget = SEMotor.getCurrentPosition() + (int) (Inches * COUNTS_PER_INCH);
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+        setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
 
-        NWMotor.setTargetPosition(NWTarget);
-        NEMotor.setTargetPosition(NETarget);
-        SWMotor.setTargetPosition(SWTarget);
-        SEMotor.setTargetPosition(SETarget);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        NEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SWMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        SEMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        SetMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
-
-        while (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy()){
-
-            NWMotor.getCurrentPosition();
-            NEMotor.getCurrentPosition();
-            SWMotor.getCurrentPosition();
-            SEMotor.getCurrentPosition();
-
+        while (opMode.opModeIsActive() && (NWMotor.isBusy() || NEMotor.isBusy() || SWMotor.isBusy() || SEMotor.isBusy())){
+            updateTelemetryForTargetAndCurrent();
         }
 
-        SetMotorPower(0, 0, 0, 0);
-
-        NWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        NEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        SEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        setMotorPower(0, 0, 0, 0);
     }
 
-    public void Nomalize () {
+    public void normalize() {
+        double maxPower = Math.max(Math.abs(NWPower), Math.abs(NEPower));
+        maxPower = Math.max(maxPower, Math.abs(SWPower));
+        maxPower = Math.max(maxPower, Math.abs(SEPower));
 
-        if (Math.abs(NWPower) > 1.0) {
-
-            NWPower /= NWPower;
+        if (maxPower > 1.0){
+            NWPower /= maxPower;
+            NEPower /= maxPower;
+            SWPower /= maxPower;
+            SEPower /= maxPower;
         }
-
-        if (Math.abs(NEPower) > 1.0) {
-
-            NEPower /= NEPower;
-
-        }
-
-        if (Math.abs(SWPower) > 1.0) {
-
-            SWPower /= SWPower;
-
-        }
-
-        if (Math.abs(SEPower) > 1.0) {
-
-            SEPower /= SEPower;
-
-        }
-
     }
 
-    public void SetMotorPower (double NWMotorPower, double NEMotorPower, double SWMotorPower, double SEMotorPower) {
+    public void calibrateGyro(){
+        //start calibrating the gyro
+        opMode.telemetry.addData(">", "Gyro Calibrating. Do Not move!");
+        opMode.telemetry.update();
+
+        opMode.sleep(1000); // wait 1 second for gyro to stabilize (may be movement from initializing servos)
+        gyro.calibrate();
+
+        // make sure the gyro is finished calibrating
+        while (!opMode.isStopRequested() && gyro.isCalibrating())  {
+            opMode.sleep(50);
+        }
+        opMode.telemetry.addData(">", "Gyro Calibrated.  Press Start.");
+        opMode.telemetry.update();
+    }
+
+    public void setMotorPower(double NWMotorPower, double NEMotorPower, double SWMotorPower, double SEMotorPower) {
 
         NWMotor.setPower(NWMotorPower);
         NEMotor.setPower(NEMotorPower);
         SWMotor.setPower(SWMotorPower);
         SEMotor.setPower(SEMotorPower);
-
     }
+
+    public void setAllEncoders(DcMotor.RunMode encoderMode) {
+        NWMotor.setMode(encoderMode);
+        NEMotor.setMode(encoderMode);
+        SWMotor.setMode(encoderMode);
+        SEMotor.setMode(encoderMode);
+    }
+
+    private void adjustAllCurrentTargets(int nwAdjust, int neAdjust, int swAdjust, int seAdjust) {
+        // calculate new target
+        nwTarget = NWMotor.getCurrentPosition() + nwAdjust;
+        neTarget = NEMotor.getCurrentPosition() + neAdjust;
+        swTarget = SWMotor.getCurrentPosition() + swAdjust;
+        seTarget = SEMotor.getCurrentPosition() + seAdjust;
+
+        setAllDriveTargets(nwTarget, neTarget, swTarget, seTarget);  // set motors to new targets
+    }
+
+    private void setAllDriveTargets(int NWTarget, int NETarget, int SWTarget, int SETarget) {
+        NWMotor.setTargetPosition(NWTarget);
+        NEMotor.setTargetPosition(NETarget);
+        SWMotor.setTargetPosition(SWTarget);
+        SEMotor.setTargetPosition(SETarget);
+    }
+
+    private void updateTelemetryForTargetAndCurrent() {
+        opMode.telemetry.addData("NW Target & Current", nwTarget +" ; " + NWMotor.getCurrentPosition());
+        opMode.telemetry.addData("NE Target & Current", neTarget +" ; " + NEMotor.getCurrentPosition());
+        opMode.telemetry.addData("SW Target & Current", swTarget +" ; " + SWMotor.getCurrentPosition());
+        opMode.telemetry.addData("SE Target & Current", seTarget +" ; " + SEMotor.getCurrentPosition());
+
+        opMode.telemetry.update();
+    }
+
+    private void testIndividualMotors() {
+        if (opMode.gamepad1.left_bumper) {
+            NWPower = .5;
+        }
+        else if (opMode.gamepad1.right_bumper) {
+            NEPower = .5;
+        }
+        else if (opMode.gamepad1.left_trigger > 0) {
+            SWPower = .5;
+        }
+        else if (opMode.gamepad1.right_trigger > 0) {
+            SEPower = .5;
+        }
+    }
+
+    private void initialDriveMotorsSetup(LinearOpMode opMode) {
+        NWMotor = opMode.hardwareMap.dcMotor.get("NWMotor");
+        NEMotor = opMode.hardwareMap.dcMotor.get("NEMotor");
+        SWMotor = opMode.hardwareMap.dcMotor.get("SWMotor");
+        SEMotor = opMode.hardwareMap.dcMotor.get("SEMotor");
+
+        NWMotor.setDirection(DcMotor.Direction.FORWARD);
+        NEMotor.setDirection(DcMotor.Direction.REVERSE);
+        SWMotor.setDirection(DcMotor.Direction.FORWARD);
+        SEMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        setMotorPower(0, 0, 0, 0);
+        setAllEncoders(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
 
     public double GridOrientationMotor1and4 () {
 
@@ -275,6 +233,9 @@ public class DriveTrain {
         return IntegrateDriveAngle = ((Math.pow(heading, 2))/(Math.pow(1.623, 2)))+((Math.pow(heading+0.927, 2))/(Math.pow(1.5, 2)));
 
     }
+
+
+
 
 }
 
