@@ -8,6 +8,8 @@ public class DexM_Hardware {
     DriveTrain driveTrain = null;
     Collector collector = null;
     Launcher launcher = null;
+    ButtonPusher beaconTrigger = null;
+
 
     private ElapsedTime period  = new ElapsedTime();
 
@@ -23,6 +25,7 @@ public class DexM_Hardware {
         driveTrain = new DriveTrain(opMode);
         collector = new Collector(opMode);
         launcher = new Launcher(opMode);
+        beaconTrigger = new ButtonPusher(opMode);
     }
 
     // for Teleop only - free resources briefly during each cycle

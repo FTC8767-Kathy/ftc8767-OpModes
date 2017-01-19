@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes8767;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -17,8 +16,6 @@ public class DexM_TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        int heading = 0;
-        int angleZ = 0;
         boolean lastResetState = false;
         boolean curResetState  = false;
 
@@ -34,13 +31,9 @@ public class DexM_TeleOp extends LinearOpMode {
             if(curResetState && !lastResetState)  {
                 robot.driveTrain.gyro.resetZAxisIntegrator();
             }
-
             lastResetState = curResetState;
 
-            heading = robot.driveTrain.gyro.getHeading();
-            angleZ  = robot.driveTrain.gyro.getIntegratedZValue();
-
-            robot.driveTrain.Drive();
+            robot.driveTrain.driveWithControllers();
 
             if (gamepad2.a) {
                 robot.collector.collect();
@@ -59,15 +52,6 @@ public class DexM_TeleOp extends LinearOpMode {
             }
 
             robot.collector.speedTest();
-
-            telemetry.addData(">", "Press A & B to reset Heading.");
-            telemetry.addData("0", "Heading %03f", robot.driveTrain.heading);
-            telemetry.addData("1", "Int. Ang. %03d", angleZ);
-            telemetry.addData("NWSpeed: ", robot.driveTrain.NWPower);
-            telemetry.addData("NESpeed: ", robot.driveTrain.NEPower);
-            telemetry.addData("SWSpeed: ", robot.driveTrain.SWPower);
-            telemetry.addData("SESpeed: ", robot.driveTrain.SEPower);
-            telemetry.update();
 
             robot.waitForTick(40);
         }
