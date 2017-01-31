@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Autonomous(name="Blue_Launch2_Center", group="DexM")
+@Autonomous(name="Blue Launch2 Center", group="DexM")
 //@Disabled
 public class Blue_Launch2_Center extends LinearOpMode {
 

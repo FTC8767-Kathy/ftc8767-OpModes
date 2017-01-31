@@ -33,14 +33,14 @@ public class Red_100Points extends LinearOpMode {
         robot.launcher.autoLaunch();
 
         //  Head toward the first beacon:
-        robot.driveTrain.driveToDistanceRange(17.78);
+        robot.driveTrain.driveToDistanceRange(17);
         robot.driveTrain.turnRight(133);
         robot.driveTrain.encoderDrive(57, DriveTrain.DRIVE_SPEED);   // change to find line w/ ods?
 
         // Find the beacon
-        robot.driveTrain.driveToLine(1.2);
+        robot.driveTrain.driveToLine(0.9);
         robot.driveTrain.turnLeft(44);
-        robot.driveTrain.strafeLeft(4);
+        robot.driveTrain.strafeToLineLeft(.6);
         robot.driveTrain.driveToDistanceRange(15);
 
         // Trigger 1st beacon to correct color
@@ -64,8 +64,8 @@ public class Red_100Points extends LinearOpMode {
         robot.driveTrain.encoderDrive(-5, DriveTrain.DRIVE_SPEED);
 
         //Go to Capball
-        robot.driveTrain.turnRight(50);
-        robot.driveTrain.encoderDrive(-60, DriveTrain.DRIVE_SPEED);
+        robot.driveTrain.turnRight(45);
+        robot.driveTrain.encoderDrive(-63, DriveTrain.DRIVE_SPEED);
 
     }
 }

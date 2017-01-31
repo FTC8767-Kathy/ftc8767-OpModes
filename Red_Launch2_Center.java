@@ -29,7 +29,7 @@ public class Red_Launch2_Center extends LinearOpMode {
         robot.driveTrain.turnLeft(25);
         robot.launcher.autoLaunch();
         sleep(1/4);  // **** ask Jonah
-        robot.collector.collectTime(2);
+        robot.collector.collectTime(3);
         sleep(1);  // **** ask Jonah
         robot.launcher.autoLaunch();
 

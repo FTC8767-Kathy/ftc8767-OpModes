@@ -37,7 +37,7 @@ public class ButtonPusher {
         pusherRight.setPosition(START_RIGHT_POSITION);
 
         colorSensor = opMode.hardwareMap.colorSensor.get("colorSensor");
-        colorSensor.enableLed(true);                        // ****** should it be on or not? ******
+        colorSensor.enableLed(false);                        // ****** should it be on or not? ******
     }
 
    public void pushCorrectButton (int allianceColor){ // this assumes color sensor is on the right

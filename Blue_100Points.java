@@ -38,9 +38,9 @@ public class Blue_100Points extends LinearOpMode {
         robot.driveTrain.encoderDrive(57, DriveTrain.DRIVE_SPEED);   // change to find line w/ ods?
 
         // Find the beacon
-        robot.driveTrain.driveToLine(1.2);
+        robot.driveTrain.driveToLine(0.9);
         robot.driveTrain.turnRight(47);
-        robot.driveTrain.strafeRight(4);
+        robot.driveTrain.strafeToLineRight(0.6);
         robot.driveTrain.driveToDistanceRange(15);
 
         // Trigger 1st beacon to correct color
@@ -55,7 +55,7 @@ public class Blue_100Points extends LinearOpMode {
         robot.driveTrain.strafeLeft(27);
         robot.driveTrain.driveToDistanceRange(15);
         robot.driveTrain.strafeLeft(25);
-        robot.driveTrain.strafeToLineLeft(1.2);
+        robot.driveTrain.strafeToLineLeft(0.7);
 
         // Trigger 2nd beacon to correct color
         robot.beaconTrigger.pushCorrectButton(allianceColor);
@@ -64,8 +64,8 @@ public class Blue_100Points extends LinearOpMode {
         robot.driveTrain.encoderDrive(-5, DriveTrain.DRIVE_SPEED);
 
         //Go to Capball
-        robot.driveTrain.turnLeft(52);
-        robot.driveTrain.encoderDrive(-60, DriveTrain.DRIVE_SPEED);
+        robot.driveTrain.turnLeft(49);
+        robot.driveTrain.encoderDrive(-63, DriveTrain.DRIVE_SPEED);
 
     }
 }

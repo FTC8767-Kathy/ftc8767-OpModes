@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Collector {
 
     private DcMotor collector = null;
-    double COLLECTOR_SPEED = .75;
+    double COLLECTOR_SPEED = 1;
 
     LinearOpMode opMode;
 
