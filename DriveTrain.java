@@ -4,6 +4,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -11,6 +12,8 @@ public class DriveTrain {
 
     public ModernRoboticsI2cGyro gyro;
     ModernRoboticsI2cRangeSensor rangeSensor;
+    OpticalDistanceSensor lightSensorLeft;
+//    OpticalDistanceSensor lightSensorRight;
 
     public DcMotor NWMotor = null; // these should be made private when EncoderDrive_Gyro_Method is fixed
     public DcMotor NEMotor = null; // then maybe create getter & setter methods?
@@ -33,17 +36,20 @@ public class DriveTrain {
 
     LinearOpMode opMode;
 
-    double IntegrateDriveAngle = 0;
-
     static final double COUNTS_PER_MOTOR_REV = 1440;
     static final double DRIVE_GEAR_REDUCTION = 1.0;
     static final double WHEEL_DIAMETER_INCHES = 4.0;
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double DRIVE_SPEED = 0.5;
-    static final double DRIVE_SPEED_COMPENSATE = 0.7;
-    static final double TURN_SPEED = 0.5;
-    static final double ULTRA_SPEED = .3;
+
+    static final double DRIVE_SPEED = 0.75;
+    static final double STRAFE_SPEED = 0.5;
+    static final double STRAFE_COMPENSATE = 1.1;
+    static final double TURN_SPEED = 0.45;
+    static final double ULTRA_SPEED = 0.16;
+    static final double FIND_LINE_SPEED = .16;
+    static final double TOP_SPEED_SCALE = .5;
+    final static double MINIMUN_POWER_TO_MOVE = .15;
 
     public DriveTrain(LinearOpMode opMode){   // constructor
         this.opMode = opMode;
@@ -52,55 +58,84 @@ public class DriveTrain {
 
         gyro = (ModernRoboticsI2cGyro)opMode.hardwareMap.gyroSensor.get("gyro");
         rangeSensor = opMode.hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");
+        lightSensorLeft = opMode.hardwareMap.get(OpticalDistanceSensor.class, "lightSensor");
     }
 
     public void driveWithControllers(){
-
-        if (opMode.gamepad1.a) {
-            NWPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x) + GridOrientationMotor1and4();
-            NEPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x) + GridOrientationMotor2and3();
-            SWPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x) + GridOrientationMotor2and3();
-            SEPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x) + GridOrientationMotor1and4();
-        }
-        else {
-            NWPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
-            NEPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
-            SWPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
-            SEPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
-        }
-
         heading = gyro.getHeading();
-        int angleZ  = gyro.getIntegratedZValue();
+
+        NWPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
+        NEPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
+        SWPower = (-opMode.gamepad1.left_stick_y - opMode.gamepad1.left_stick_x + opMode.gamepad1.right_stick_x);
+        SEPower = (-opMode.gamepad1.left_stick_y + opMode.gamepad1.left_stick_x - opMode.gamepad1.right_stick_x);
+
+        checkDPadForTeleop();
 
         // check if driver wants to run an individual motor with triggers & bumpers
         testIndividualMotors();
 
+/*
+        // scale down speed for better control
+        NWPower *= TOP_SPEED_SCALE;
+        NEPower *= TOP_SPEED_SCALE;
+        SWPower *= TOP_SPEED_SCALE;
+        SEPower *= TOP_SPEED_SCALE;
+*/
+        // scale drive power for each motor for better control at slower speeds
+        customizeDrivePowers();
+
+        normalize();
+
         // set motor power based on joysticks **** individual states WILL override joysticks
         setMotorPower(NWPower, NEPower, SWPower, SEPower);
-
-        //normalize();
-
-        opMode.telemetry.addData(">", "Press A & B to reset Heading.");
-        opMode.telemetry.addData("0", "Heading %03f", heading);
-        opMode.telemetry.addData("1", "Int. Ang. %03d", angleZ);
-        opMode.telemetry.addData("NWSpeed: ", NWPower);
-        opMode.telemetry.addData("NESpeed: ", NEPower);
-        opMode.telemetry.addData("SWSpeed: ", SWPower);
-        opMode.telemetry.addData("SESpeed: ", SEPower);
-        opMode.telemetry.update();
     }
 
-    public void encoderDrive (double inches) {
+    public void encoderDrive (double inches, double inPower) {
         // calculate & adjust drive motor targets for number of inches desired
         int adjustTicks = (int) (inches * COUNTS_PER_INCH);
         adjustAllCurrentTargets(adjustTicks, adjustTicks, adjustTicks, adjustTicks);
 
         setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-        setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED));
+        setAllMotorPowersTheSame(Math.abs(inPower));
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
-        setMotorPower(0, 0, 0, 0);
+        setAllMotorPowersTheSame(0);
+    }
+
+    public void driveToDistanceRange (double targetDistance){
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        while (opMode.opModeIsActive()){
+            double currentDistance = rangeSensor.getDistance(DistanceUnit.CM);
+
+            if (currentDistance > targetDistance + 0.25){
+                updateTelemetryForDistanceRange(targetDistance,currentDistance);
+                setAllMotorPowersTheSame(ULTRA_SPEED);
+            }
+            else if (currentDistance < targetDistance - 0.25){
+                updateTelemetryForDistanceRange(targetDistance,currentDistance);
+                setAllMotorPowersTheSame(-ULTRA_SPEED);
+            }
+            else{
+                setAllMotorPowersTheSame(0);
+                break;
+            }
+        }
+    }
+
+    public void driveToLine(double targetLightValue){
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        double currentLightValue = lightSensorLeft.getRawLightDetected();
+
+        while (opMode.opModeIsActive() && currentLightValue < targetLightValue){
+            opMode.telemetry.addData("Raw", lightSensorLeft.getRawLightDetected());
+            opMode.telemetry.update();
+            setAllMotorPowersTheSame(FIND_LINE_SPEED);
+            currentLightValue = lightSensorLeft.getRawLightDetected();
+        }
+
+        setAllMotorPowersTheSame(0);
     }
 
     private void encoderTurn (double degrees) {
@@ -110,10 +145,10 @@ public class DriveTrain {
 
         setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-        setMotorPower(Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED), Math.abs(TURN_SPEED));
+        setAllMotorPowersTheSame(Math.abs(TURN_SPEED));
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
-        setMotorPower(0, 0, 0, 0);
+        setAllMotorPowersTheSame(0);
     }
 
     public void turnLeft (double degrees){
@@ -131,10 +166,10 @@ public class DriveTrain {
 
         setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-        setMotorPower(Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED), Math.abs(DRIVE_SPEED_COMPENSATE), Math.abs(DRIVE_SPEED_COMPENSATE));
+        setMotorPower(Math.abs(STRAFE_SPEED), Math.abs(STRAFE_SPEED), Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED), Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED));
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
-        setMotorPower(0, 0, 0, 0);
+        setAllMotorPowersTheSame(0);
     }
 
     public void strafeLeft (double inches){
@@ -145,40 +180,34 @@ public class DriveTrain {
         encoderStrafe(inches);
     }
 
-    public void normalize() {
-        double maxPower = Math.max(Math.abs(NWPower), Math.abs(NEPower));
-        maxPower = Math.max(maxPower, Math.abs(SWPower));
-        maxPower = Math.max(maxPower, Math.abs(SEPower));
+    public void strafeToLineRight (double targetLightValue){
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        if (maxPower > 1.0){
-            NWPower /= maxPower;
-            NEPower /= maxPower;
-            SWPower /= maxPower;
-            SEPower /= maxPower;
+        double currentLightValue = lightSensorLeft.getRawLightDetected();
+
+        while (opMode.opModeIsActive() && currentLightValue < targetLightValue){
+            setMotorPower(FIND_LINE_SPEED, -FIND_LINE_SPEED, -FIND_LINE_SPEED, FIND_LINE_SPEED);
+            currentLightValue = lightSensorLeft.getRawLightDetected();
         }
+
+        setAllMotorPowersTheSame(0);
     }
 
-    public void calibrateGyro(){
-        //start calibrating the gyro
-        opMode.telemetry.addData(">", "Gyro Calibrating. Do Not move!");
-        opMode.telemetry.update();
+    public void strafeToLineLeft (double targetLightValue){
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        opMode.sleep(1000); // wait 1 second for gyro to stabilize (may be movement from initializing servos)
-        gyro.calibrate();
+        double currentLightValue = lightSensorLeft.getRawLightDetected();
 
-        // make sure the gyro is finished calibrating
-        while (!opMode.isStopRequested() && gyro.isCalibrating())  {
-            opMode.sleep(50);
+        while (opMode.opModeIsActive() && currentLightValue < targetLightValue){
+            setMotorPower(-FIND_LINE_SPEED, FIND_LINE_SPEED, FIND_LINE_SPEED, -FIND_LINE_SPEED);
+            currentLightValue = lightSensorLeft.getRawLightDetected();
         }
-        opMode.telemetry.addData(">", "Gyro Calibrated.  Press Start.");
-        opMode.telemetry.update();
+
+        setAllMotorPowersTheSame(0);
     }
 
-    public void driveToDistanceRange (double targetDistance){
-        while (rangeSensor.getDistance(DistanceUnit.CM) > targetDistance){
-            setMotorPower(ULTRA_SPEED, ULTRA_SPEED, ULTRA_SPEED, ULTRA_SPEED);
-        }
-        setMotorPower(0,0,0,0);
+    private void setAllMotorPowersTheSame(double inPower) {
+        setMotorPower(inPower, inPower, inPower, inPower);
     }
 
     public void setMotorPower(double NWMotorPower, double NEMotorPower, double SWMotorPower, double SEMotorPower) {
@@ -219,6 +248,15 @@ public class DriveTrain {
         }
     }
 
+    public void drivetrainTelemetry() {
+        opMode.telemetry.addData(">", "Press A & B to reset Heading.");
+        opMode.telemetry.addData("0", "Heading %03f", heading);
+        opMode.telemetry.addData("NWSpeed: ", NWPower);
+        opMode.telemetry.addData("NESpeed: ", NEPower);
+        opMode.telemetry.addData("SWSpeed: ", SWPower);
+        opMode.telemetry.addData("SESpeed: ", SEPower);
+    }
+
     private void updateTelemetryForTargetAndCurrent() {
         opMode.telemetry.addData("NW Target, Current & power", nwTarget + " ; " + NWMotor.getCurrentPosition() + " ; "+ NWMotor.getPower() );
         opMode.telemetry.addData("NE Target, Current & power", neTarget + " ; " + NEMotor.getCurrentPosition() + " ; "+ NEMotor.getPower() );
@@ -226,6 +264,92 @@ public class DriveTrain {
         opMode.telemetry.addData("SE Target, Current & power", seTarget + " ; " + SEMotor.getCurrentPosition() + " ; "+ SEMotor.getPower() );
 
         opMode.telemetry.update();
+    }
+
+    private void updateTelemetryForDistanceRange(double targetDistance, double currentDistance) {
+        opMode.telemetry.addData("Target distance", targetDistance);
+        opMode.telemetry.addData("Current distance", currentDistance);
+        opMode.telemetry.addData("NW Target, Current & power", nwTarget + " ; " + NWMotor.getCurrentPosition() + " ; "+ NWMotor.getPower() );
+        opMode.telemetry.addData("NE Target, Current & power", neTarget + " ; " + NEMotor.getCurrentPosition() + " ; "+ NEMotor.getPower() );
+        opMode.telemetry.addData("SW Target, Current & power", swTarget + " ; " + SWMotor.getCurrentPosition() + " ; "+ SWMotor.getPower() );
+        opMode.telemetry.addData("SE Target, Current & power", seTarget + " ; " + SEMotor.getCurrentPosition() + " ; "+ SEMotor.getPower() );
+
+        opMode.telemetry.update();
+    }
+
+    private void setMotorPowerVariable(double nwPower, double nePower, double swPower, double sePower) {
+        NWPower = nwPower;
+        NEPower = nePower;
+        SWPower = swPower;
+        SEPower = sePower;
+    }
+
+    private void customizeDrivePowers() {
+        NWPower = customizeMotorPower(NWPower);
+        NEPower = customizeMotorPower(NEPower);
+        SWPower = customizeMotorPower(SWPower);
+        SEPower = customizeMotorPower(SEPower);
+
+        addMinimumPower();
+    }
+
+    private double customizeMotorPower(double initialPower) {
+        if (initialPower == 0) {
+            return 0;
+        }
+
+        if (initialPower > .80) {
+            return initialPower;
+        }
+        else if (initialPower > .60) {
+            return initialPower * .5;
+        }
+        else if (initialPower > 0){
+            return initialPower * .25;
+        }
+
+        // negative power
+        else {
+            if (initialPower < -.80) {
+                return  initialPower;
+            }
+            else if (initialPower < -.60) {
+                return  initialPower * .5;
+            }
+            else {
+                return  initialPower * .25;
+            }
+        }
+    }
+
+    private void addMinimumPower() {
+        if (NWPower > 0) NWPower += MINIMUN_POWER_TO_MOVE;
+        else if (NWPower < 0) NWPower -= MINIMUN_POWER_TO_MOVE;
+
+        if (NEPower > 0) NEPower += MINIMUN_POWER_TO_MOVE;
+        else if (NEPower < 0) NEPower -= MINIMUN_POWER_TO_MOVE;
+
+        if (SWPower > 0) SWPower += MINIMUN_POWER_TO_MOVE;
+        else if (SWPower < 0) SWPower -= MINIMUN_POWER_TO_MOVE;
+
+        if (SEPower > 0) SEPower += MINIMUN_POWER_TO_MOVE;
+        else if (SEPower < 0) SEPower -= MINIMUN_POWER_TO_MOVE;
+
+    }
+
+    private void checkDPadForTeleop() {
+        if (opMode.gamepad1.dpad_up) {
+            setMotorPowerVariable(TOP_SPEED_SCALE, TOP_SPEED_SCALE, TOP_SPEED_SCALE, TOP_SPEED_SCALE);
+        }
+        else if (opMode.gamepad1.dpad_down) {
+            setMotorPowerVariable(-TOP_SPEED_SCALE, -TOP_SPEED_SCALE, -TOP_SPEED_SCALE, -TOP_SPEED_SCALE);
+        }
+        else if (opMode.gamepad1.dpad_left) {
+            setMotorPowerVariable(-TOP_SPEED_SCALE, TOP_SPEED_SCALE, TOP_SPEED_SCALE, -TOP_SPEED_SCALE);
+        }
+        else if (opMode.gamepad1.dpad_right) {
+            setMotorPowerVariable(TOP_SPEED_SCALE, -TOP_SPEED_SCALE, -TOP_SPEED_SCALE, TOP_SPEED_SCALE);
+        }
     }
 
     private void testIndividualMotors() {
@@ -243,6 +367,35 @@ public class DriveTrain {
         }
     }
 
+    private void normalize() {
+        double maxPower = Math.max(Math.abs(NWPower), Math.abs(NEPower));
+        maxPower = Math.max(maxPower, Math.abs(SWPower));
+        maxPower = Math.max(maxPower, Math.abs(SEPower));
+
+        if (maxPower > 1.0){
+            NWPower /= maxPower;
+            NEPower /= maxPower;
+            SWPower /= maxPower;
+            SEPower /= maxPower;
+        }
+    }
+
+    public void calibrateGyro(){
+        //start calibrating the gyro
+        opMode.telemetry.addData(">", "Gyro Calibrating. Do Not move!");
+        opMode.telemetry.update();
+
+        opMode.sleep(1000); // wait 1 second for gyro to stabilize (may be movement from initializing servos)
+        gyro.calibrate();
+
+        // make sure the gyro is finished calibrating
+        while (!opMode.isStopRequested() && gyro.isCalibrating())  {
+            opMode.sleep(50);
+        }
+        opMode.telemetry.addData(">", "Gyro Calibrated.  Press Start.");
+        opMode.telemetry.update();
+    }
+
     private void initialDriveMotorsSetup(LinearOpMode opMode) {
         NWMotor = opMode.hardwareMap.dcMotor.get("NWMotor");
         NEMotor = opMode.hardwareMap.dcMotor.get("NEMotor");
@@ -254,20 +407,8 @@ public class DriveTrain {
         SWMotor.setDirection(DcMotor.Direction.FORWARD);
         SEMotor.setDirection(DcMotor.Direction.REVERSE);
 
-        setMotorPower(0, 0, 0, 0);
+        setAllMotorPowersTheSame(0);
         setAllEncoders(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    public double GridOrientationMotor1and4 () {
-
-        return IntegrateDriveAngle = ((Math.pow(heading, 2))/(Math.pow(1.623, 2)))+((Math.pow(heading-0.927, 2))/(Math.pow(1.5, 2)));
-
-    }
-
-    public double GridOrientationMotor2and3 () {
-
-        return IntegrateDriveAngle = ((Math.pow(heading, 2))/(Math.pow(1.623, 2)))+((Math.pow(heading+0.927, 2))/(Math.pow(1.5, 2)));
-
     }
 }
 

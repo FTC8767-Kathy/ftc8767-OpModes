@@ -23,8 +23,8 @@ public class Collector {
         collector.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public void collect(){
-        collector.setPower(COLLECTOR_SPEED);
+    public void collect(double collectPower){
+        collector.setPower(collectPower);
     }
 
     public void reverse(){
@@ -41,7 +41,7 @@ public class Collector {
 
         runtime.reset();
         while (opMode.opModeIsActive() && (runtime.seconds() < collectSeconds)){
-            collect(); //collectTime (Collects the ball)
+            collect(COLLECTOR_SPEED); //collectTime (Collects the ball)
         }
         stop();
     }

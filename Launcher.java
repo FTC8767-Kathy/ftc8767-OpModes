@@ -9,7 +9,8 @@ public class Launcher {
     private DcMotor launcher = null;
     private ElapsedTime runtime = new ElapsedTime();
 
-    final static double AUTO_LAUNCH_TIME = 1.0;
+    final static double AUTO_LAUNCH_TIME = 1.2;
+//    final static int AUTO_LAUNCH_TARGET = (int) (1120 * 3) - 325; // 3360 (1120 for AM Motor)
 
     LinearOpMode opMode;
 
@@ -17,11 +18,14 @@ public class Launcher {
         this.opMode = opMode;
 
         launcher = opMode.hardwareMap.dcMotor.get("motor_launcher");
+        launcher.setDirection(DcMotor.Direction.REVERSE);
+
         launcher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void launch(){
-        launcher.setPower(-1);
+        launcher.setPower(.75);
     }
 
     public void stop(){
@@ -29,8 +33,16 @@ public class Launcher {
     }
 
     public void autoLaunch(){
+//        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        launcher.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        launcher.setTargetPosition(AUTO_LAUNCH_TARGET);
+
         opMode.telemetry.addData("Auto launching", "Please wait");
+        launcherTelemetry();
         opMode.telemetry.update();
+
+//        launch();
 
         runtime.reset();
 
@@ -38,5 +50,10 @@ public class Launcher {
             launch();
         }
         stop();
+    }
+
+    public void launcherTelemetry() {
+//        opMode.telemetry.addData("Target", AUTO_LAUNCH_TARGET);
+        opMode.telemetry.addData("Current", launcher.getCurrentPosition());
     }
 }

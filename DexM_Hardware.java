@@ -9,7 +9,7 @@ public class DexM_Hardware {
     Collector collector = null;
     Launcher launcher = null;
     ButtonPusher beaconTrigger = null;
-
+    Sweeper sweeper = null;
 
     private ElapsedTime period  = new ElapsedTime();
 
@@ -26,6 +26,7 @@ public class DexM_Hardware {
         collector = new Collector(opMode);
         launcher = new Launcher(opMode);
         beaconTrigger = new ButtonPusher(opMode);
+        sweeper = new Sweeper(opMode);
     }
 
     // for Teleop only - free resources briefly during each cycle
