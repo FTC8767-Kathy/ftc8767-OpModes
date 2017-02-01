@@ -5,6 +5,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -50,6 +51,10 @@ public class DriveTrain {
     static final double FIND_LINE_SPEED = .16;
     static final double TOP_SPEED_SCALE = .5;
     final static double MINIMUN_POWER_TO_MOVE = .15;
+
+    static final double     HEADING_THRESHOLD       = 1 ;
+    static final double     P_TURN_COEFF            = 0.1;     // Larger is more responsive, but also less stable
+    static final double     P_DRIVE_COEFF           = 0.15;     // Larger is more responsive, but also less stable
 
     public DriveTrain(LinearOpMode opMode){   // constructor
         this.opMode = opMode;
@@ -411,24 +416,10 @@ public class DriveTrain {
         setAllEncoders(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    /**
-     * Method to drive on a fixed compass bearing (angle), based on encoder counts.
-     * Move will stop if either of these conditions occur:
-     * 1) Move gets to the desired position
-     * 2) Driver stops the opmode running.
-     *
-     * @param speed    Target speed for forward motion.  Should allow for _/- variance for adjusting heading
-     * @param distance Distance (in inches) to move from current position.  Negative distance means move backwards.
-     * @param angle    Absolute Angle (in Degrees) relative to last gyro reset.
-     *                 0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                 If a relative angle is required, add/subtract from current heading.
-     */
     public void gyroDrive(double speed,
                           double distance,
                           double angle) {
 
-        int newLeftTarget;
-        int newRightTarget;
         int adjustTicks;
         double max;
         double error;
@@ -457,8 +448,9 @@ public class DriveTrain {
                 steer = getSteer(error, P_DRIVE_COEFF);
 
                 // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0)
+                if (distance < 0) {
                     steer *= -1.0;
+                }
 
                 leftSpeed = speed - steer;
                 rightSpeed = speed + steer;
@@ -474,14 +466,6 @@ public class DriveTrain {
                 SWMotor.setPower(leftSpeed);
                 NEMotor.setPower(rightSpeed);
                 SEMotor.setPower(rightSpeed);
-
-                // Display drive status for the driver.
-                telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
-                telemetry.addData("Target", "%7d:%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Actual", "%7d:%7d", NWMotor.getCurrentPosition(),
-                        NEMotor.getCurrentPosition(), SEMotor.getCurrentPosition(), SWMotor.getCurrentPosition());
-                telemetry.addData("Speed", "%5.2f:%5.2f", leftSpeed, rightSpeed);
-                telemetry.update();
             }
 
             // Stop all motion;
@@ -495,13 +479,45 @@ public class DriveTrain {
         }
     }
 
-    /**
-     * getError determines the error between the target angle and the robot's current heading
-     *
-     * @param targetAngle Desired angle (relative to global reference established at last Gyro Reset).
-     * @return error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
-     * +ve error means the robot should turn LEFT (CCW) to reduce error.
-     */
+    public void gyroTurn (  double speed, double angle) {
+
+        // keep looping while we are still active, and not on heading.
+        while (opMode.opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
+            // Update telemetry & Allow time for other processes to run.
+            opMode.telemetry.update();
+        }
+    }
+
+    boolean onHeading(double speed, double angle, double PCoeff) {
+        double   error ;
+        double   steer ;
+        boolean  onTarget = false ;
+        double leftSpeed;
+        double rightSpeed;
+
+        // determine turn power based on +/- error
+        error = getError(angle);
+
+        if (Math.abs(error) <= HEADING_THRESHOLD) {
+            leftSpeed  = 0.0;
+            rightSpeed = 0.0;
+            onTarget = true;
+        }
+        else {
+            steer = getSteer(error, PCoeff);
+            rightSpeed  = speed * steer;
+            leftSpeed   = -rightSpeed;
+        }
+
+        // Send desired speeds to motors.
+        NWMotor.setPower(leftSpeed);
+        NEMotor.setPower(rightSpeed);
+        SWMotor.setPower(leftSpeed);
+        SEMotor.setPower(rightSpeed);
+
+        return onTarget;
+    }
+
     public double getError(double targetAngle) {
 
         double robotError;
@@ -511,6 +527,10 @@ public class DriveTrain {
         while (robotError > 180) robotError -= 360;
         while (robotError <= -180) robotError += 360;
         return robotError;
+    }
+
+    public double getSteer(double error, double PCoeff) {
+        return Range.clip(error * PCoeff, -1, 1);
     }
 
 }
