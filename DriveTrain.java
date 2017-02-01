@@ -43,7 +43,7 @@ public class DriveTrain {
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double DRIVE_SPEED = 0.75;
+    static final double DRIVE_SPEED = 0.74;
     static final double STRAFE_SPEED = 0.5;
     static final double STRAFE_COMPENSATE = 1.1;
     static final double TURN_SPEED = 0.45;
