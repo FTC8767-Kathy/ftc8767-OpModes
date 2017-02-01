@@ -470,25 +470,28 @@ public class DriveTrain {
                     rightSpeed /= max;
                 }
 
-                robot.leftMotor.setPower(leftSpeed);
-                robot.rightMotor.setPower(rightSpeed);
+                NWMotor.setPower(leftSpeed);
+                SWMotor.setPower(leftSpeed);
+                NEMotor.setPower(rightSpeed);
+                SEMotor.setPower(rightSpeed);
 
                 // Display drive status for the driver.
                 telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
                 telemetry.addData("Target", "%7d:%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Actual", "%7d:%7d", robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
+                telemetry.addData("Actual", "%7d:%7d", NWMotor.getCurrentPosition(),
+                        NEMotor.getCurrentPosition(), SEMotor.getCurrentPosition(), SWMotor.getCurrentPosition());
                 telemetry.addData("Speed", "%5.2f:%5.2f", leftSpeed, rightSpeed);
                 telemetry.update();
             }
 
             // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
+            setAllMotorPowersTheSame(0);
 
             // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            NEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            NWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            SEMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            SWMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
     }
 
