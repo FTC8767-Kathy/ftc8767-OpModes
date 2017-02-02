@@ -21,9 +21,16 @@ public class Red_100Points extends LinearOpMode {
     public void runOpMode() {
         robot.init(this);
 
+        robot.driveTrain.calibrateGyro();
+
         robot.driveTrain.setAllEncoders(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         waitForStart();
+
+        robot.driveTrain.gyroDrive(.75,10,0);
+        robot.driveTrain.gyroTurn(.6,30);
+
+        sleep(50000);
 
         // launch 2 particles
         robot.launcher.autoLaunch();
