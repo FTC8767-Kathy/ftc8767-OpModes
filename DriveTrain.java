@@ -43,7 +43,7 @@ public class DriveTrain {
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double DRIVE_SPEED = 0.74;
+    static final double DRIVE_SPEED = 0.75;
     static final double STRAFE_SPEED = 0.5;
     static final double STRAFE_COMPENSATE = 1.1;
     static final double TURN_SPEED = 0.45;
@@ -417,7 +417,7 @@ public class DriveTrain {
     }
 
     public void gyroDrive(double speed,
-                          double distance,
+                          double inches,
                           double angle) {
 
         int adjustTicks;
@@ -431,7 +431,7 @@ public class DriveTrain {
         if (opMode.opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            adjustTicks = (int) (distance * DriveTrain.COUNTS_PER_INCH);
+            adjustTicks = (int) (inches * DriveTrain.COUNTS_PER_INCH);
             adjustAllCurrentTargets(adjustTicks, adjustTicks, adjustTicks, adjustTicks);
 
             setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
@@ -448,19 +448,14 @@ public class DriveTrain {
                 steer = getSteer(error, P_DRIVE_COEFF);
 
                 // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0) {
+                if (inches < 0) {
                     steer *= -1.0;
                 }
 
                 leftSpeed = speed - steer;
                 rightSpeed = speed + steer;
 
-                // Normalize speeds if any one exceeds +/- 1.0;
-                max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
-                if (max > 1.0) {
-                    leftSpeed /= max;
-                    rightSpeed /= max;
-                }
+                normalize();
 
                 NWMotor.setPower(leftSpeed);
                 SWMotor.setPower(leftSpeed);
@@ -531,6 +526,41 @@ public class DriveTrain {
 
     public double getSteer(double error, double PCoeff) {
         return Range.clip(error * PCoeff, -1, 1);
+    }
+
+    public void GyroStrafeRight (double speed, double inches, double angle) {
+        // calculate & adjust driveWithControllers motor targets for number of inches desired
+        int adjustTicks = (int) (inches * COUNTS_PER_INCH);
+        double error;
+        double steer;
+
+        adjustAllCurrentTargets(adjustTicks, -adjustTicks, -adjustTicks, adjustTicks);
+
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (opMode.opModeIsActive() && (NWMotor.isBusy() && NEMotor.isBusy() && SWMotor.isBusy()&& SEMotor.isBusy())){
+
+            // adjust relative speed based on heading error.
+            error = getError(angle);
+            steer = getSteer(error, P_DRIVE_COEFF);
+
+            // if driving in reverse, the motor correction also needs to be reversed
+            if (inches < 0) {
+                steer *= -1.0;
+            }
+
+            setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+            setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+            setMotorPower(Math.abs(STRAFE_SPEED + steer),
+                    Math.abs(STRAFE_SPEED - steer),
+                    Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED + steer),
+                    Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED - steer));
+
+        }
+
+        waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
+        setAllMotorPowersTheSame(0);
     }
 
 }
