@@ -254,7 +254,6 @@ public class DriveTrain {
     }
 
     public void drivetrainTelemetry() {
-        opMode.telemetry.addData(">", "Press A & B to reset Heading.");
         opMode.telemetry.addData("0", "Heading %03f", heading);
         opMode.telemetry.addData("NWSpeed: ", NWPower);
         opMode.telemetry.addData("NESpeed: ", NEPower);
@@ -361,13 +360,13 @@ public class DriveTrain {
         if (opMode.gamepad1.left_bumper) {
             NWPower = .5;
         }
-        else if (opMode.gamepad1.right_bumper) {
+        if (opMode.gamepad1.right_bumper) {
             NEPower = .5;
         }
-        else if (opMode.gamepad1.left_trigger > 0) {
+        if (opMode.gamepad1.left_trigger > 0) {
             SWPower = .5;
         }
-        else if (opMode.gamepad1.right_trigger > 0) {
+        if (opMode.gamepad1.right_trigger > 0) {
             SEPower = .5;
         }
     }

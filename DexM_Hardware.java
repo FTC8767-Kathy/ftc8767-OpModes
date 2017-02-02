@@ -10,6 +10,8 @@ public class DexM_Hardware {
     Launcher launcher = null;
     ButtonPusher beaconTrigger = null;
     Sweeper sweeper = null;
+    CapLift capLift = null;
+    CapLiftLock capLiftLock = null;
 
     private ElapsedTime period  = new ElapsedTime();
 
@@ -27,6 +29,8 @@ public class DexM_Hardware {
         launcher = new Launcher(opMode);
         beaconTrigger = new ButtonPusher(opMode);
         sweeper = new Sweeper(opMode);
+        capLift = new CapLift(opMode);
+        capLiftLock = new CapLiftLock(opMode);
     }
 
     // for Teleop only - free resources briefly during each cycle

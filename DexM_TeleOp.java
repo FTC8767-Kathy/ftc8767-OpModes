@@ -21,6 +21,8 @@ public class DexM_TeleOp extends LinearOpMode {
         robot.init(this);
 //        robot.driveTrain.calibrateGyro();
 
+        robot.capLiftLock.Lower();
+
         waitForStart();
 
         while (opModeIsActive()) {
@@ -32,6 +34,8 @@ public class DexM_TeleOp extends LinearOpMode {
             checkForLauncherCommand();
             checkForSweeperCommands();
             checkForBeaconPusherCommands();
+            checkForCapLiftCommands();
+            checkForCapLiftLockCommands();
 
 //            robot.collector.speedTest();
 
@@ -75,13 +79,13 @@ public class DexM_TeleOp extends LinearOpMode {
     }
 
     private void checkForSweeperCommands() {
-        if (robot.opMode.gamepad2.dpad_up) {
+        if (robot.opMode.gamepad1.y) {
             robot.sweeper.setSweeper0Percent();
         }
-        else if (robot.opMode.gamepad2.dpad_right || robot.opMode.gamepad2.dpad_left) {
+        else if (robot.opMode.gamepad1.x || robot.opMode.gamepad1.b) {
             robot.sweeper.setSweeper50Percent();
         }
-        else if (robot.opMode.gamepad2.dpad_down) {
+        else if (robot.opMode.gamepad1.a) {
             robot.sweeper.setSweeper70Percent();
         }
     }
@@ -96,17 +100,52 @@ public class DexM_TeleOp extends LinearOpMode {
     }
 
     private void checkForCollectorCommands() {
-/*
-        if (gamepad2.a) {
-            robot.collector.collect();
-        }
-        else if (gamepad2.x) {
-            robot.collector.reverse();
-        }
-        else if (gamepad2.b) {
-            robot.collector.stop();
-        }
-*/
         robot.collector.collect(gamepad2.right_stick_y);
+    }
+
+    private void checkForCapLiftCommands () {
+
+        if (robot.opMode.gamepad2.dpad_up) {
+
+            robot.capLift.Lift();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_left) {
+
+            robot.capLift.Stop();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_right) {
+
+            robot.capLift.Stop();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_down) {
+
+            robot.capLift.Lower();
+
+        }
+
+        robot.capLift.capLift.setPower(-robot.opMode.gamepad1.right_stick_y);
+
+    }
+
+    private void checkForCapLiftLockCommands () {
+
+        if (robot.opMode.gamepad2.a) {
+
+            robot.capLiftLock.Lower();
+
+        }
+
+        if (robot.opMode.gamepad2.y) {
+
+            robot.capLiftLock.Lift();
+
+        }
+
     }
 }
