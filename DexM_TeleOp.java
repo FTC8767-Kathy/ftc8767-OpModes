@@ -37,6 +37,8 @@ public class DexM_TeleOp extends LinearOpMode {
             checkForCapLiftCommands();
             checkForCapLiftLockCommands();
 
+//            robot.collector.speedTest();
+
             updateTelemetry();
 
             robot.waitForTick(40);
@@ -80,16 +82,16 @@ public class DexM_TeleOp extends LinearOpMode {
         if (robot.opMode.gamepad1.y) {
             robot.sweeper.setSweeper0Percent();
         }
-        else if (robot.opMode.gamepad1.b) {
+        else if (robot.opMode.gamepad1.x || robot.opMode.gamepad1.b) {
             robot.sweeper.setSweeper50Percent();
         }
-        else if (robot.opMode.gamepad1.x) {
+        else if (robot.opMode.gamepad1.a) {
             robot.sweeper.setSweeper70Percent();
         }
     }
 
     private void checkForLauncherCommand() {
-        if (gamepad2.a) {
+        if (gamepad2.left_stick_y < -.5) {
             robot.launcher.launch();
         }
         else {
@@ -103,11 +105,41 @@ public class DexM_TeleOp extends LinearOpMode {
 
     private void checkForCapLiftCommands () {
 
-        robot.capLift.Lift();
+        if (robot.opMode.gamepad2.dpad_up) {
+
+            robot.capLift.Lift();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_left) {
+
+            robot.capLift.Stop();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_right) {
+
+            robot.capLift.Stop();
+
+        }
+
+        if (robot.opMode.gamepad2.dpad_down) {
+
+            robot.capLift.Lower();
+
+        }
+
+        robot.capLift.capLift.setPower(-robot.opMode.gamepad1.right_stick_y);
 
     }
 
     private void checkForCapLiftLockCommands () {
+
+        if (robot.opMode.gamepad2.a) {
+
+            robot.capLiftLock.Lower();
+
+        }
 
         if (robot.opMode.gamepad2.y) {
 

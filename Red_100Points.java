@@ -27,8 +27,9 @@ public class Red_100Points extends LinearOpMode {
 
         waitForStart();
 
-        robot.driveTrain.gyroDrive(.75,10,0);
-        robot.driveTrain.gyroTurn(.6,30);
+        robot.driveTrain.gyroDrive(.4,70,0);
+        robot.driveTrain.gyroStrafeRight(.75, 30, 90);
+//        robot.driveTrain.gyroTurn(.6,30);
 
         sleep(50000);
 
