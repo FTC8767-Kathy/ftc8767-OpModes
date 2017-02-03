@@ -37,8 +37,6 @@ public class DexM_TeleOp extends LinearOpMode {
             checkForCapLiftCommands();
             checkForCapLiftLockCommands();
 
-//            robot.collector.speedTest();
-
             updateTelemetry();
 
             robot.waitForTick(40);
