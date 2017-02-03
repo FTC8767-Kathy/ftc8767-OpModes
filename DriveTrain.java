@@ -79,13 +79,6 @@ public class DriveTrain {
         // check if driver wants to run an individual motor with triggers & bumpers
         testIndividualMotors();
 
-/*
-        // scale down speed for better control
-        NWPower *= TOP_SPEED_SCALE;
-        NEPower *= TOP_SPEED_SCALE;
-        SWPower *= TOP_SPEED_SCALE;
-        SEPower *= TOP_SPEED_SCALE;
-*/
         // scale drive power for each motor for better control at slower speeds
         customizeDrivePowers();
 

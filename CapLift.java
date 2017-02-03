@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class CapLift {
 
-    public DcMotor capLift = null;
+    private DcMotor capLift = null;
 
     LinearOpMode opMode;
 
@@ -15,19 +15,11 @@ public class CapLift {
 
         capLift = opMode.hardwareMap.dcMotor.get("motor_CapLift");
 
-        capLift.setDirection(DcMotor.Direction.REVERSE);
         capLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void Lift(){
-        capLift.setPower(.75);
+        capLift.setPower(-opMode.gamepad2.left_stick_y);
     }
 
-    public void Lower(){
-        capLift.setPower(-.75);
-    }
-
-    public void Stop(){
-        capLift.setPower(0);
-    }
 }

@@ -91,7 +91,7 @@ public class DexM_TeleOp extends LinearOpMode {
     }
 
     private void checkForLauncherCommand() {
-        if (gamepad2.left_stick_y < -.5) {
+        if (gamepad2.a) {
             robot.launcher.launch();
         }
         else {
@@ -105,41 +105,11 @@ public class DexM_TeleOp extends LinearOpMode {
 
     private void checkForCapLiftCommands () {
 
-        if (robot.opMode.gamepad2.dpad_up) {
-
-            robot.capLift.Lift();
-
-        }
-
-        if (robot.opMode.gamepad2.dpad_left) {
-
-            robot.capLift.Stop();
-
-        }
-
-        if (robot.opMode.gamepad2.dpad_right) {
-
-            robot.capLift.Stop();
-
-        }
-
-        if (robot.opMode.gamepad2.dpad_down) {
-
-            robot.capLift.Lower();
-
-        }
-
-        robot.capLift.capLift.setPower(-robot.opMode.gamepad1.right_stick_y);
+        robot.capLift.Lift();
 
     }
 
     private void checkForCapLiftLockCommands () {
-
-        if (robot.opMode.gamepad2.a) {
-
-            robot.capLiftLock.Lower();
-
-        }
 
         if (robot.opMode.gamepad2.y) {
 
