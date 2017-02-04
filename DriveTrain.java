@@ -214,6 +214,8 @@ public class DriveTrain {
         NEMotor.setPower(NEMotorPower);
         SWMotor.setPower(SWMotorPower);
         SEMotor.setPower(SEMotorPower);
+
+        //ProportionalDrive(NWMotorPower, NEMotorPower, SWMotorPower, SEMotorPower);
     }
 
     public void setAllEncoders(DcMotor.RunMode encoderMode) {
@@ -413,10 +415,11 @@ public class DriveTrain {
                           double angle) {
 
         int adjustTicks;
-        double error;
         double steer;
-        double leftSpeed;
-        double rightSpeed;
+        double NWSpeed;
+        double NESpeed;
+        double SWSpeed;
+        double SESpeed;
 
         // Ensure that the opmode is still active
         if (opMode.opModeIsActive()) {
@@ -435,23 +438,24 @@ public class DriveTrain {
             while (opMode.opModeIsActive() && (NWMotor.isBusy() && NEMotor.isBusy() && SWMotor.isBusy()&& SEMotor.isBusy())){
 
                 // adjust relative speed based on heading error.
-                error = getError(angle);
-                steer = getSteer(error, P_DRIVE_COEFF);
+                steer = -0.001 * Math.pow((angle - gyro.getHeading()), 3);
 
                 // if driving in reverse, the motor correction also needs to be reversed
-                if (inches < 0) {
-                    steer *= -1.0;
-                }
 
-                leftSpeed = speed - steer;
-                rightSpeed = speed + steer;
+
+                NWSpeed = speed - steer;
+                NESpeed = speed + steer;
+                SWSpeed = speed - steer;
+                SESpeed = speed + steer;
 
                 normalize();
 
-                NWMotor.setPower(leftSpeed);
-                SWMotor.setPower(leftSpeed);
-                NEMotor.setPower(rightSpeed);
-                SEMotor.setPower(rightSpeed);
+                //ProportionalDrive(NWSpeed, NESpeed, SWSpeed, SESpeed);
+
+                NWMotor.setPower(NWSpeed);
+                SWMotor.setPower(SWSpeed);
+                NEMotor.setPower(NESpeed);
+                SEMotor.setPower(SESpeed);
             }
 
             // Stop all motion;
@@ -519,7 +523,7 @@ public class DriveTrain {
         return Range.clip(error * PCoeff, -1, 1);
     }
 
-    public void GyroStrafeRight (double speed, double inches, double angle) {
+    public void GyroStrafeRight (double inches) {
         // calculate & adjust driveWithControllers motor targets for number of inches desired
         int adjustTicks = (int) (inches * COUNTS_PER_INCH);
         double error;
@@ -533,25 +537,79 @@ public class DriveTrain {
         while (opMode.opModeIsActive() && (NWMotor.isBusy() && NEMotor.isBusy() && SWMotor.isBusy()&& SEMotor.isBusy())){
 
             // adjust relative speed based on heading error.
-            error = getError(angle);
-            steer = getSteer(error, P_DRIVE_COEFF);
+            steer = -0.001 * Math.pow((90 - gyro.getHeading()), 3);
 
             // if driving in reverse, the motor correction also needs to be reversed
-            if (inches < 0) {
-                steer *= -1.0;
-            }
 
             setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
             setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-            setMotorPower(Math.abs(STRAFE_SPEED + steer),
-                    Math.abs(STRAFE_SPEED - steer),
-                    Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED + steer),
-                    Math.abs(STRAFE_COMPENSATE * STRAFE_SPEED - steer));
+            setMotorPower(Math.abs(-1 + steer),
+                    Math.abs(1 - steer),
+                    Math.abs(-1 + steer),
+                    Math.abs(1 - steer));
 
         }
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setAllMotorPowersTheSame(0);
+    }
+
+    public double ProportionalDrive (double nWSpeed, double nESpeed, double sWSpeed, double sESpeed) {
+        if (NWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                || NWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+            nWSpeed /= 4;
+
+            return nWSpeed;
+        }
+        else if (NWMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                || NWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+            nWSpeed *= 4;
+
+            return nWSpeed;
+        }
+
+        if (NEMotor.getCurrentPosition() > NWMotor.getCurrentPosition() || NEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                || NEMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+            nESpeed /= 4;
+
+            return nESpeed;
+        }
+        else if (NEMotor.getCurrentPosition() < NWMotor.getCurrentPosition() || NEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                || NEMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+            nESpeed *= 4;
+
+            return nESpeed;
+        }
+
+        if (SWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || SWMotor.getCurrentPosition() > NWMotor.getCurrentPosition()
+                || SWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+            sWSpeed /= 4;
+
+            return sWSpeed;
+        }
+        else if (SWMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || SWMotor.getCurrentPosition() < NWMotor.getCurrentPosition()
+                || SWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+            sWSpeed *= 4;
+
+            return sWSpeed;
+        }
+
+        if (SEMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || SEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                || SEMotor.getCurrentPosition() > NWMotor.getCurrentPosition()) {
+            sESpeed /= 4;
+
+            return sESpeed;
+        }
+        else if (SEMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || SEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                || SEMotor.getCurrentPosition() < NWMotor.getCurrentPosition()) {
+            sESpeed *= 4;
+
+            return sESpeed;
+        }
+
+        else {
+            return 1;
+        }
     }
 
 }
