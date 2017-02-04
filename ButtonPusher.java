@@ -55,11 +55,6 @@ public class ButtonPusher {
        opMode.telemetry.update();
    }
 
-    public void pushBothButtons(){
-        pushLeftButton();
-        pushRightButton();
-    }
-
     public void retractBothPushers(){
         retractLeftPusher();
         retractRightPusher();
