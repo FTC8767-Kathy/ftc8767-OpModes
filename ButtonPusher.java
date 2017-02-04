@@ -14,8 +14,6 @@ public class ButtonPusher {
 
     LinearOpMode opMode;
 
-    public ElapsedTime runtime = new ElapsedTime();
-
     final static int RED = 1;
     final static int BLUE = 2;
 
