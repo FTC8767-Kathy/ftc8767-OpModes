@@ -413,7 +413,6 @@ public class DriveTrain {
                           double angle) {
 
         int adjustTicks;
-        double max;
         double error;
         double steer;
         double leftSpeed;
@@ -520,7 +519,7 @@ public class DriveTrain {
         return Range.clip(error * PCoeff, -1, 1);
     }
 
-    public void gyroStrafeRight (double speed, double inches, double angle) {
+    public void GyroStrafeRight (double speed, double inches, double angle) {
         // calculate & adjust driveWithControllers motor targets for number of inches desired
         int adjustTicks = (int) (inches * COUNTS_PER_INCH);
         double error;
