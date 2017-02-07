@@ -540,7 +540,7 @@ public class DriveTrain {
 
             // adjust relative speed based on heading error.
             steer = -0.001 * Math.pow((90 - gyro.getHeading()), 3);
-            //
+            //equation for power distribution
 
             // if driving in reverse, the motor correction also needs to be reversed
 
