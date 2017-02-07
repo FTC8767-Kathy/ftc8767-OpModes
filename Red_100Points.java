@@ -27,18 +27,15 @@ public class Red_100Points extends LinearOpMode {
 
         waitForStart();
 
-        robot.driveTrain.gyroDrive(.75,70,0);
-        robot.driveTrain.GyroStrafeRight(30);
+//        test for gyro
+//        robot.driveTrain.gyroDrive(.75,70,0);
+//        robot.driveTrain.gyroTurn(0.75,180);
+//        robot.driveTrain.GyroStrafeRight(30);
 //        robot.driveTrain.gyroTurn(.6,30);
 
         sleep(50000);
 
-        // launch 2 particles
-        robot.launcher.autoLaunch();
-        sleep(1/4);  // **** ask Jonah
-        robot.collector.collectTime(2);
-        sleep(1);  // **** ask Jonah
-        robot.launcher.autoLaunch();
+
 
         //  Head toward the first beacon:
         robot.driveTrain.driveToDistanceRange(17);
@@ -74,6 +71,11 @@ public class Red_100Points extends LinearOpMode {
         //Go to Capball
         robot.driveTrain.turnRight(45);
         robot.driveTrain.encoderDrive(-63, DriveTrain.DRIVE_SPEED);
+        robot.launcher.autoLaunch();
+        sleep(1/4);  // **** ask Jonah
+        robot.collector.collectTime(2);
+        sleep(1);  // **** ask Jonah
+        robot.launcher.autoLaunch();
 
     }
 }
