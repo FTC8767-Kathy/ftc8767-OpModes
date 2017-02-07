@@ -15,7 +15,7 @@ public class Red_100Points extends LinearOpMode {
     final static int RED = 1;
     final static int BLUE = 2;
 
-    public int allianceColor = 1;   // for blue set to 2
+    public int allianceColor = 1;   // for blue set to 2()
 
     @Override
     public void runOpMode() {
