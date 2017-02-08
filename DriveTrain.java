@@ -494,7 +494,7 @@ public class DriveTrain {
             onTarget = true;
         }
         else {
-            steer = getSteer(error, PCoeff);
+            steer = -0.001 * Math.pow((angle - gyro.getHeading()), 3);
             rightSpeed  = speed * steer;
             leftSpeed   = -rightSpeed;
         }
