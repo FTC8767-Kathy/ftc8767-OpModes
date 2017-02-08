@@ -440,8 +440,6 @@ public class DriveTrain {
                 // adjust relative speed based on heading error.
                 steer = -0.001 * Math.pow((angle - gyro.getHeading()), 3);
 
-                //I added this change in so that it would push to github.
-
                 // if driving in reverse, the motor correction also needs to be reversed
 
 
@@ -471,7 +469,7 @@ public class DriveTrain {
         }
     }
 
-    public void gyroTurn (  double speed, double angle) {
+    public void gyroTurn (double speed, double angle) {
 
         // keep looping while we are still active, and not on heading.
         while (opMode.opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
@@ -528,30 +526,12 @@ public class DriveTrain {
     public void GyroStrafeRight (double inches) {
         // calculate & adjust driveWithControllers motor targets for number of inches desired
         int adjustTicks = (int) (inches * COUNTS_PER_INCH);
-        double error;
-        double steer;
-
+        double steer = -0.001 * Math.pow((90 - gyro.getHeading()), 3);
         adjustAllCurrentTargets(adjustTicks, -adjustTicks, -adjustTicks, adjustTicks);
 
         setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opMode.opModeIsActive() && (NWMotor.isBusy() && NEMotor.isBusy() && SWMotor.isBusy()&& SEMotor.isBusy())){
-
-            // adjust relative speed based on heading error.
-            steer = -0.001 * Math.pow((90 - gyro.getHeading()), 3);
-            //equation for power distribution
-
-            // if driving in reverse, the motor correction also needs to be reversed
-
-            setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
-            setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-            setMotorPower(Math.abs(-1 + steer),
-                    Math.abs(1 - steer),
-                    Math.abs(-1 + steer),
-                    Math.abs(1 - steer));
-
-        }
+        setMotorPower(Math.abs(STRAFE_SPEED + steer), Math.abs(STRAFE_SPEED + steer), Math.abs((STRAFE_COMPENSATE * STRAFE_SPEED) - steer), Math.abs((STRAFE_COMPENSATE * STRAFE_SPEED) - steer));
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setAllMotorPowersTheSame(0);
