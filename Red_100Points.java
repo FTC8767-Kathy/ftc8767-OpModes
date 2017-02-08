@@ -28,10 +28,10 @@ public class Red_100Points extends LinearOpMode {
         waitForStart();
 
 //        test for gyro
-//        robot.driveTrain.gyroDrive(.75,70,0);
-//        robot.driveTrain.gyroTurn(0.75,180);
-//        robot.driveTrain.GyroStrafeRight(30);
-//        robot.driveTrain.gyroTurn(.6,30);
+        robot.driveTrain.gyroDrive(.75,70,0);
+        robot.driveTrain.gyroTurn(0.75,180);
+        robot.driveTrain.GyroStrafeRight(30);
+
 
         sleep(50000);
 
@@ -39,12 +39,12 @@ public class Red_100Points extends LinearOpMode {
 
         //  Head toward the first beacon:
         robot.driveTrain.driveToDistanceRange(17);
-        robot.driveTrain.turnRight(133);
-        robot.driveTrain.encoderDrive(57, DriveTrain.DRIVE_SPEED);   // change to find line w/ ods?
+        robot.driveTrain.gyroTurn(0.75,137);
+        robot.driveTrain.gyroDrive(0.8,57,137);   // change to find line w/ ods?
 
         // Find the beacon
         robot.driveTrain.driveToLine(0.9);
-        robot.driveTrain.turnLeft(44);
+        robot.driveTrain.gyroTurn(0.75,43);
         robot.driveTrain.strafeToLineLeft(.6);
         robot.driveTrain.driveToDistanceRange(15);
 
