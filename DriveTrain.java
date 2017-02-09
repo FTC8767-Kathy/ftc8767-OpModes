@@ -537,6 +537,19 @@ public class DriveTrain {
         setAllMotorPowersTheSame(0);
     }
 
+    public void GyroStrafeLeft (double inches) {
+        // calculate & adjust driveWithControllers motor targets for number of inches desired
+        int adjustTicks = (int) (inches * COUNTS_PER_INCH);
+        double steer = -0.001 * Math.pow((90 - gyro.getHeading()), 3);
+        adjustAllCurrentTargets(-adjustTicks, adjustTicks, adjustTicks, -adjustTicks);
+
+        setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
+        setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
+        setMotorPower(Math.abs(STRAFE_SPEED - steer), Math.abs(STRAFE_SPEED - steer), Math.abs((STRAFE_COMPENSATE * STRAFE_SPEED) + steer), Math.abs((STRAFE_COMPENSATE * STRAFE_SPEED) + steer));
+
+        waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
+        setAllMotorPowersTheSame(0);
+    }
     public double ProportionalDrive (double nWSpeed, double nESpeed, double sWSpeed, double sESpeed) {
         if (NWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
                 || NWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {

@@ -20,9 +20,7 @@ public class Red_100Points extends LinearOpMode {
     @Override
     public void runOpMode() {
         robot.init(this);
-
         robot.driveTrain.calibrateGyro();
-
         robot.driveTrain.setAllEncoders(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         waitForStart();
@@ -31,11 +29,9 @@ public class Red_100Points extends LinearOpMode {
         robot.driveTrain.gyroDrive(.75,70,0);
         robot.driveTrain.gyroTurn(0.75,180);
         robot.driveTrain.GyroStrafeRight(30);
-
+        robot.driveTrain.GyroStrafeLeft(30);
 
         sleep(50000);
-
-
 
         //  Head toward the first beacon:
         robot.driveTrain.driveToDistanceRange(17);
