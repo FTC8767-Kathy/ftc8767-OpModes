@@ -95,7 +95,8 @@ public class DriveTrain {
 
         setAllEncoders(DcMotor.RunMode.RUN_USING_ENCODER);
         setAllEncoders(DcMotor.RunMode.RUN_TO_POSITION);
-        setAllMotorPowersTheSame(Math.abs(inPower));
+        ProportionalDrive(inPower, inPower, inPower, inPower);
+        //setAllMotorPowersTheSame(Math.abs(inPower));
 
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setAllMotorPowersTheSame(0);
