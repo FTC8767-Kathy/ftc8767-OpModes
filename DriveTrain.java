@@ -550,6 +550,7 @@ public class DriveTrain {
         waitForDriveTargetsToReach();  // update telemetry while motors work toward targets
         setAllMotorPowersTheSame(0);
     }
+
     public double ProportionalDrive (double nWSpeed, double nESpeed, double sWSpeed, double sESpeed) {
         if (NWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
                 || NWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
