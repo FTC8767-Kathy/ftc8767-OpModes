@@ -552,62 +552,74 @@ public class DriveTrain {
         setAllMotorPowersTheSame(0);
     }
 
-    public double ProportionalDrive (double nWSpeed, double nESpeed, double sWSpeed, double sESpeed) {
-        if (NWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
-                || NWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
-            nWSpeed /= 4;
+    public void ProportionalDrive (double nWSpeed, double nESpeed, double sWSpeed, double sESpeed) {
 
-            return nWSpeed;
+        while (opMode.opModeIsActive()) {
+
+            if (NWMotor.getCurrentPosition() > NEMotor.getCurrentPosition()
+                    || NWMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                    || NWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+
+                nWSpeed /= 4;
+
+            }
+            else if (NWMotor.getCurrentPosition() < NEMotor.getCurrentPosition()
+                    || NWMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                    || NWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+
+                nWSpeed *= 4;
+
+            }
+
+            if (NEMotor.getCurrentPosition() > NWMotor.getCurrentPosition()
+                    || NEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                    || NEMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+
+                nESpeed /= 4;
+
+            }
+            else if (NEMotor.getCurrentPosition() < NWMotor.getCurrentPosition()
+                    || NEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                    || NEMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+
+                nESpeed *= 4;
+
+            }
+
+            if (SWMotor.getCurrentPosition() > NEMotor.getCurrentPosition()
+                    || SWMotor.getCurrentPosition() > NWMotor.getCurrentPosition()
+                    || SWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
+
+                sWSpeed /= 4;
+
+            }
+            else if (SWMotor.getCurrentPosition() < NEMotor.getCurrentPosition()
+                    || SWMotor.getCurrentPosition() < NWMotor.getCurrentPosition()
+                    || SWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
+
+                sWSpeed *= 4;
+
+            }
+
+            if (SEMotor.getCurrentPosition() > NEMotor.getCurrentPosition()
+                    || SEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
+                    || SEMotor.getCurrentPosition() > NWMotor.getCurrentPosition()) {
+
+                sESpeed /= 4;
+
+            }
+            else if (SEMotor.getCurrentPosition() < NEMotor.getCurrentPosition()
+                    || SEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
+                    || SEMotor.getCurrentPosition() < NWMotor.getCurrentPosition()) {
+
+                sESpeed *= 4;
+
+            }
+
+            setMotorPower(nWSpeed, nESpeed, sWSpeed, sESpeed);
+
         }
-        else if (NWMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || NWMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
-                || NWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
-            nWSpeed *= 4;
 
-            return nWSpeed;
-        }
-
-        if (NEMotor.getCurrentPosition() > NWMotor.getCurrentPosition() || NEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
-                || NEMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
-            nESpeed /= 4;
-
-            return nESpeed;
-        }
-        else if (NEMotor.getCurrentPosition() < NWMotor.getCurrentPosition() || NEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
-                || NEMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
-            nESpeed *= 4;
-
-            return nESpeed;
-        }
-
-        if (SWMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || SWMotor.getCurrentPosition() > NWMotor.getCurrentPosition()
-                || SWMotor.getCurrentPosition() > SEMotor.getCurrentPosition()) {
-            sWSpeed /= 4;
-
-            return sWSpeed;
-        }
-        else if (SWMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || SWMotor.getCurrentPosition() < NWMotor.getCurrentPosition()
-                || SWMotor.getCurrentPosition() < SEMotor.getCurrentPosition()) {
-            sWSpeed *= 4;
-
-            return sWSpeed;
-        }
-
-        if (SEMotor.getCurrentPosition() > NEMotor.getCurrentPosition() || SEMotor.getCurrentPosition() > SWMotor.getCurrentPosition()
-                || SEMotor.getCurrentPosition() > NWMotor.getCurrentPosition()) {
-            sESpeed /= 4;
-
-            return sESpeed;
-        }
-        else if (SEMotor.getCurrentPosition() < NEMotor.getCurrentPosition() || SEMotor.getCurrentPosition() < SWMotor.getCurrentPosition()
-                || SEMotor.getCurrentPosition() < NWMotor.getCurrentPosition()) {
-            sESpeed *= 4;
-
-            return sESpeed;
-        }
-
-        else {
-            return 1;
-        }
     }
 
 }
