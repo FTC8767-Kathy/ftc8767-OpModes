@@ -25,11 +25,14 @@ public class Red_100Points extends LinearOpMode {
 
         waitForStart();
 
-//        test for gyro
+        //test for gyro
         robot.driveTrain.gyroDrive(.75,70,0);
         robot.driveTrain.gyroTurn(0.75,180);
         robot.driveTrain.GyroStrafeRight(30);
         robot.driveTrain.GyroStrafeLeft(30);
+
+        //EncoderDrive Test
+        robot.driveTrain.encoderDrive(50,0.7);
 
         sleep(50000);
 
@@ -53,25 +56,29 @@ public class Red_100Points extends LinearOpMode {
         robot.driveTrain.driveToDistanceRange(15);
 
         // Strafe Right
-        robot.driveTrain.strafeRight(27);
+        robot.driveTrain.GyroStrafeRight(27);
         robot.driveTrain.driveToDistanceRange(15);
-        robot.driveTrain.strafeRight(25);
+        robot.driveTrain.GyroStrafeRight(25);
         robot.driveTrain.strafeToLineRight(1.2);
 
         // Trigger 2nd beacon to correct color
         robot.beaconTrigger.pushCorrectButton(allianceColor);
         robot.driveTrain.driveToDistanceRange(7);
         robot.beaconTrigger.retractBothPushers();
-        robot.driveTrain.encoderDrive(-5, DriveTrain.DRIVE_SPEED);
+        robot.driveTrain.gyroDrive(-0.7,5,90);
 
         //Go to Capball
-        robot.driveTrain.turnRight(45);
-        robot.driveTrain.encoderDrive(-63, DriveTrain.DRIVE_SPEED);
-        robot.launcher.autoLaunch();
-        sleep(1/4);  // **** ask Jonah
-        robot.collector.collectTime(2);
-        sleep(1);  // **** ask Jonah
-        robot.launcher.autoLaunch();
+        robot.driveTrain.gyroTurn(0.75,135);
+        robot.driveTrain.gyroDrive(0.8,20,135);
+
+        //Shot Ball and Collect
+        //robot.launcher.autoLaunch();
+        //sleep(1/4);  // **** ask Jonah
+        //robot.collector.collectTime(2);
+        //sleep(1);  // **** ask Jonah
+        //robot.launcher.autoLaunch();
+
+        robot.driveTrain.gyroDrive(1,30,135);
 
     }
 }

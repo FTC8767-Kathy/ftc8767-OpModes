@@ -12,7 +12,7 @@ public class CapLiftLock {
     public CapLiftLock(LinearOpMode opMode){ // constructor
         this.opMode = opMode;
 
-//        capLiftLock = opMode.hardwareMap.servo.get("motor_CapLiftLock");
+        capLiftLock = opMode.hardwareMap.servo.get("motor_CapLiftLock");
     }
 
     public void Lift(){
