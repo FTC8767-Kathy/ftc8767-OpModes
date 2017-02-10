@@ -10,7 +10,7 @@ public class DexM_Hardware {
     Launcher launcher = null;
     ButtonPusher beaconTrigger = null;
     Sweeper sweeper = null;
-    CapLift capLift = null;
+   CapLift capLift = null;
     CapLiftLock capLiftLock = null;
 
     private ElapsedTime period  = new ElapsedTime();

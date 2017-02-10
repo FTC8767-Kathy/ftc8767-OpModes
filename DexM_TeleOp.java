@@ -19,7 +19,7 @@ public class DexM_TeleOp extends LinearOpMode {
     public void runOpMode() {
 
         robot.init(this);
-//        robot.driveTrain.calibrateGyro();
+       robot.driveTrain.calibrateGyro();
 
         robot.capLiftLock.Lower();
 

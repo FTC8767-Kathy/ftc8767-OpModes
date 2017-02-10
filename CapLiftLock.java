@@ -16,7 +16,7 @@ public class CapLiftLock {
     }
 
     public void Lift(){
-        capLiftLock.setPosition(.5);
+        capLiftLock.setPosition(0);
     }
 
     public void Lower(){
